@@ -76,8 +76,8 @@ def adjustdepth(diffs, depth):
         if elems == '':
             continue
         (firstWord, *_) = elems.split(maxsplit=1)
-        if depth != None and len(firstWord.split('/')) == depth:
-            break
+        if depth != None and len(firstWord.split('/')) > (depth + 1):
+            continue
         print(YELLOW + '===========================================' + RESET)
         lst = elems.split('\n')
         print(RED + '---' + RESET, end='')
