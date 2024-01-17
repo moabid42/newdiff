@@ -10,6 +10,18 @@ GREEN = '\033[92m'
 YELLOW = '\033[93m'
 RESET = '\033[00m'
 
+def disableColors():
+    global PURPLE
+    global GRAY
+    global RED
+    global GREEN
+    global YELLOW
+    PURPLE = RESET
+    GRAY = RESET
+    RED = RESET
+    GREEN = RESET
+    YELLOW = RESET
+
 def cdRun(command, runDir):
     wd = os.getcwd()
     os.chdir(runDir)
@@ -58,16 +70,36 @@ def getFilesPerms(dir1, dir2, depth):
     perms1 = clean(cdRun(cmd1, dir1))
     perms2 = clean(cdRun(cmd2, dir2))
     arrange(perms1, perms2)
-    
+
+def adjustdepth(diffs, depth):
+    for elems in diffs:
+        if elems == '':
+            continue
+        (firstWord, *_) = elems.split(maxsplit=1)
+        if depth != None and len(firstWord.split('/')) == depth:
+            break
+        print(YELLOW + '===========================================' + RESET)
+        lst = elems.split('\n')
+        print(RED + '---' + RESET, end='')
+        for line in lst:
+            if line == '':
+                break 
+            elif line[:3] == '+++':
+                print(GREEN + '+++' + RESET + PURPLE + line[3:] + RESET)
+            elif line[0] == '+':
+                print(GREEN + line + RESET)
+            elif line[0] == '-':
+                print(RED + line + RESET)
+            else :
+                print(line)
+        print(YELLOW + '===========================================' + RESET)
 
 def getDiffs(dir1, dir2, depth):
     print(GREEN + 'Comparing the content of the files ...' + RESET)
-    if depth == None:
-        cmd = f'diff -Naur {dir1} {dir2} | grep -v diff'
-    else :
-        cmd = f'diff -Nau {dir1} {dir2} | grep -v diff'
+    cmd = f'diff -Naur {dir1} {dir2} | grep -v "diff\|@"'
     diffs_str = run(cmd)
-    print(*diffs_str, sep=YELLOW + '\n===========================================\n' + RESET)
+    adjustdepth(diffs_str, depth)
+    # print(*diffs_str, sep=YELLOW + '\n===========================================\n' + RESET)
 
 def main():
     parser = argparse.ArgumentParser(description='Compare files including permissions and ownership.')
@@ -76,8 +108,11 @@ def main():
     parser.add_argument("-p", help="Compare the permissions and the ownership only.", action="store_true")
     parser.add_argument("-f", help="Compare the differences line by line.", action="store_true")
     parser.add_argument("-a", help="Run -p and -d respectively [DEFAULT].", action="store_true", default=True)
-    parser.add_argument("-d", "--depth", type=int, help="Spedify the depth.")
+    parser.add_argument("-c", "--colorsoff", help="Disable the colors", action="store_true")
+    parser.add_argument("-d", "--depth", type=int, help="Specify the depth.")
     args = parser.parse_args()
+    if args.colorsoff:
+        disableColors()
     if args.p:
         getFilesPerms(args.DIR1, args.DIR2, args.depth)
     elif args.f:
@@ -88,3 +123,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    sys.stdout = sys.__stdout__
