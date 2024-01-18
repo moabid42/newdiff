@@ -35,7 +35,7 @@ def run(command):
     return stdout.split('---')
 
 def getPermsOf(Permslist, dirRoot):
-    return [item for item in Permslist if dirRoot in item]
+    return [item for item in Permslist if dirRoot not in item]
 
 def clean(arr):
     arr.pop()
@@ -59,14 +59,22 @@ def arrange(perms1, perms2):
             flag = False
     print('\n\n')
 
-def getFilesPerms(dir1, dir2, depth):
+def getFilesPerms(dir1, dir2, depth, exclude):
     print(GREEN + 'Comparing file permissions ...' + RESET)
     if depth != None:
-        cmd1 = f'find . -maxdepth {depth} -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
-        cmd2 = f'find . -maxdepth {depth} -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
+        if exclude != None:
+            cmd1 = f'find . -maxdepth {depth} -not -path {exclude} -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
+            cmd2 = f'find . -maxdepth {depth} -not -path {exclude} -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
+        else:
+            cmd1 = f'find . -maxdepth {depth} -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
+            cmd2 = f'find . -maxdepth {depth} -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
     else :
-        cmd1 = f'find . -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
-        cmd2 = f'find . -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
+        if exclude != None:
+            cmd1 = f'find . -not -path {exclude} -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
+            cmd2 = f'find . -not -path {exclude} -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
+        else:
+            cmd1 = f'find . -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
+            cmd2 = f'find . -printf {RED}%-20M{RESET}%-10u%-10g{PURPLE}%-10p{RESET}\\n'.split()
     perms1 = clean(cdRun(cmd1, dir1))
     perms2 = clean(cdRun(cmd2, dir2))
     arrange(perms1, perms2)
@@ -110,15 +118,16 @@ def main():
     parser.add_argument("-a", help="Run -p and -d respectively [DEFAULT].", action="store_true", default=True)
     parser.add_argument("-c", "--colorsoff", help="Disable the colors", action="store_true")
     parser.add_argument("-d", "--depth", type=int, help="Specify the depth.")
+    parser.add_argument("-e", "--exclude", help="Exclude a particular dir [ACCEPTS WILDCARDS]")
     args = parser.parse_args()
     if args.colorsoff:
         disableColors()
     if args.p:
-        getFilesPerms(args.DIR1, args.DIR2, args.depth)
+        getFilesPerms(args.DIR1, args.DIR2, args.depth, args.exclude)
     elif args.f:
         getDiffs(args.DIR1, args.DIR2, args.depth)
     else:
-        getFilesPerms(args.DIR1, args.DIR2, args.depth)
+        getFilesPerms(args.DIR1, args.DIR2, args.depth, args.exclude)
         getDiffs(args.DIR1, args.DIR2, args.depth)
 
 if __name__ == '__main__':
