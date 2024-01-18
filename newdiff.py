@@ -34,7 +34,7 @@ def run(command):
     stdout, stderr = process.communicate()
     return stdout.split('---')
 
-def getPermsOf(Permslist, dirRoot):
+def trimElems(Permslist, dirRoot):
     return [item for item in Permslist if dirRoot not in item]
 
 def clean(arr):
@@ -102,12 +102,14 @@ def adjustdepth(diffs, depth):
                 print(line)
         print(YELLOW + '===========================================' + RESET)
 
-def getDiffs(dir1, dir2, depth):
+def getDiffs(dir1, dir2, depth, exclude):
     print(GREEN + 'Comparing the content of the files ...' + RESET)
-    cmd = f'diff -Naur {dir1} {dir2} | grep -v "diff\|@"'
+    if exclude != None:
+        cmd = f'diff -Naur {dir1} {dir2} -x {exclude} | grep -v "diff\|@"'
+    else:
+        cmd = f'diff -Naur {dir1} {dir2} | grep -v "diff\|@"'
     diffs_str = run(cmd)
     adjustdepth(diffs_str, depth)
-    # print(*diffs_str, sep=YELLOW + '\n===========================================\n' + RESET)
 
 def main():
     parser = argparse.ArgumentParser(description='Compare files including permissions and ownership.')
@@ -125,10 +127,10 @@ def main():
     if args.p:
         getFilesPerms(args.DIR1, args.DIR2, args.depth, args.exclude)
     elif args.f:
-        getDiffs(args.DIR1, args.DIR2, args.depth)
+        getDiffs(args.DIR1, args.DIR2, args.depth, args.exclude)
     else:
         getFilesPerms(args.DIR1, args.DIR2, args.depth, args.exclude)
-        getDiffs(args.DIR1, args.DIR2, args.depth)
+        getDiffs(args.DIR1, args.DIR2, args.depth, args.exclude)
 
 if __name__ == '__main__':
     main()
